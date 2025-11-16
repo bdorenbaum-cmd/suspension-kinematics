@@ -8,8 +8,6 @@ EXPORT_GRAPHICS_HEGIHT = "auto";
 EXPORT_GRAPHICS_WIDTH = "auto";
 EXPORT_GRAPHICS_PADDING = 30;
 
-WHEEL_BASE = 60.5; % TODO: derive from rear WC point
-
 displacements = (-TRAVEL_DELTA:1:TRAVEL_DELTA).';
 
 n = numel(displacements);
@@ -17,6 +15,8 @@ front_results = dictionary;
 rear_results = dictionary;
 
 P = get_kinematic_points();
+
+wheel_base = abs(P.FWC(1) - P.RWC(1));
 
 for i = 1:n
 
@@ -68,10 +68,10 @@ for i = 1:n
     front.svic = calculate_svic(P.FUCA, P.FUCF, P.FLCA, P.FLCF, front.UCO, front.LCO, front.WC);
 
     % Anti Dive
-    front.anti_dive_percent = calculate_anti_dive(front.WCP, front.svic, BRAKE_BIAS_PERCENT, COG_HEIGHT_INCHES, WHEEL_BASE);
+    front.anti_dive_percent = calculate_anti_dive(front.WCP, front.svic, BRAKE_BIAS_PERCENT, COG_HEIGHT_INCHES, wheel_base);
 
     % Anti Lift
-    front.anti_lift_percent = calculate_anti_lift();
+    front.anti_lift_percent = calculate_anti_lift_accl(front.WCP, front.svic, COG_HEIGHT_INCHES, wheel_base);
 
     % Roll Center Height (heave)
     front.roll_center_heave = calculate_roll_center_heave(front.fvic, front.WCP);
@@ -115,10 +115,10 @@ for i = 1:n
     rear.svic = calculate_svic(P.RUCA, P.RUCF, P.RLCA, P.RLCF, rear.UCO, rear.LCO, rear.WC);
 
     % Anti Dive
-    rear.anti_squat_percent = calculate_anti_dive(rear.WCP, rear.svic, BRAKE_BIAS_PERCENT, COG_HEIGHT_INCHES, WHEEL_BASE);
+    rear.anti_squat_percent = calculate_anti_squat(rear.WCP, rear.svic, COG_HEIGHT_INCHES, wheel_base);
 
     % Anti Lift
-    rear.anti_lift_percent = calculate_anti_lift();
+    rear.anti_lift_percent = calculate_anti_lift_brake(rear.WCP, rear.svic, BRAKE_BIAS_PERCENT, COG_HEIGHT_INCHES, wheel_base);
 
     % Roll Center Height (heave)
     rear.roll_center_heave = calculate_roll_center_heave(rear.fvic, rear.WCP);
@@ -273,14 +273,14 @@ f_anti_lift = figure('Name', 'Anti-Lift', 'NumberTitle', 'off');
 
 subplot(2,1,1);
 plot(z_disp_front, anti_lift_percent_front, 'o-', 'LineWidth', 1.5);
-title('Front - Anti-Lift');
+title('Front - Anti-Lift (Acceleration)');
 xlabel('Displacement (mm)');
 ylabel('Anti-Lift (%)');
 grid on;
 
 subplot(2,1,2);
 plot(z_disp_rear, anti_lift_percent_rear, 's-', 'LineWidth', 1.5);
-title('Rear - Anti-Lift');
+title('Rear - Anti-Lift (Brake)');
 xlabel('Displacement (mm)');
 ylabel('Anti-Lift (%)');
 grid on;
@@ -289,7 +289,7 @@ grid on;
 f_anti_squat = figure('Name', 'Anti-Squat', 'NumberTitle', 'off');
 
 subplot(2,1,1);
-plot(z_disp_front, anti_squat_percent_rear, 's-', 'LineWidth', 1.5);
+plot(z_disp_rear, anti_squat_percent_rear, 's-', 'LineWidth', 1.5);
 xlabel('Displacement (mm)');
 ylabel('Anti-Squat (%)');
 title('Anti-Squat Percent');

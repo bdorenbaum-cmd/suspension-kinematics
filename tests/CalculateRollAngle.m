@@ -5,7 +5,15 @@ classdef CalculateRollAngle < matlab.unittest.TestCase
             right = [-0.027744879997082, 23.516055605004311, 0.979160580156086];
 
             result = calculate_roll_angle(left, right);
-            testCase.assertEqual(result, 2.71828324369083, "AbsTol", 1e-6)
+            testCase.assertEqual(result, 2.38041450618945, "AbsTol", 1e-6)
+       end
+
+       function verifySlightRollRight(testCase)
+            left  = [0.013790729398345, 23.475440831957169, -0.405828370551819];
+            right = [-0.012477812908190, 23.514060816952394, 0.407045982591843];
+
+            result = calculate_roll_angle(left, right);
+            testCase.assertEqual(result, 0.991064450744588, "AbsTol", 1e-6)
        end
 
        function verifyRollLeft(testCase)
@@ -13,7 +21,7 @@ classdef CalculateRollAngle < matlab.unittest.TestCase
             left = [-0.027744879997082, 23.516055605004311, 0.979160580156086];
 
             result = calculate_roll_angle(left, right);
-            testCase.assertEqual(result, -2.71828324369083, "AbsTol", 1e-6)
+            testCase.assertEqual(result, -2.38041450618945, "AbsTol", 1e-6)
        end
 
        function verifyNoRoll(testCase)

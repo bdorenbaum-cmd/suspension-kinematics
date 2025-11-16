@@ -1,5 +1,5 @@
-function fvic = calculate_fvic(P, UO, LO, WC)
-[x0, v] = calculate_instant_axis(P, UO, LO);
+function fvic = calculate_fvic(UCA, UCF, LCA, LCF, UO, LO, WC)
+[x0, v] = calculate_instant_axis(UCA, UCF, LCA, LCF, UO, LO);
 
 % Solve for intersection with side-view plane at X = WC(1)
 t = (WC(1) - x0(1)) / v(1);

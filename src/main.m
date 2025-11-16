@@ -101,6 +101,7 @@ plot(z_disp, camber_rate, 'o-', 'LineWidth', 1.5);
 xlabel('Displacement (mm)');
 ylabel('Camber Change (deg)');
 title('Camber Rate');
+grid on;
 
 % === Caster vs. Displacement ===
 figure('Name', 'Caster Rate', 'NumberTitle', 'off');
@@ -108,6 +109,7 @@ plot(z_disp, caster, 's-', 'LineWidth', 1.5);
 xlabel('Displacement (mm)');
 ylabel('Caster Change (deg)');
 title('Caster Rate');
+grid on;
 
 % === Kingpin vs. Displacement ===
 % TODO: Implement
@@ -118,6 +120,7 @@ plot(z_disp, mech_trail, 's-', 'LineWidth', 1.5);
 xlabel('Displacement (mm)');
 ylabel('Mechancial Trail (mm)');
 title('Mechancial Trail');
+grid on;
 
 % === Scrub Radius vs. Displacement ===
 figure('Name', 'Scrub Radius', 'NumberTitle', 'off');
@@ -125,6 +128,7 @@ plot(z_disp, scrub_radius, 's-', 'LineWidth', 1.5);
 xlabel('Displacement (mm)');
 ylabel('Scrub Radius (mm)');
 title('Scrub Radius');
+grid on;
 
 % === Toe vs. Displacement (Bump Steer) ===
 figure('Name', 'Bump Steer', 'NumberTitle', 'off');
@@ -132,6 +136,7 @@ plot(z_disp, toe, 's-', 'LineWidth', 1.5);
 xlabel('Displacement (mm)');
 ylabel('Toe Change (deg)');
 title('Bump Steer');
+grid on;
 
 % === Anti-Dive Percent vs. Displacement ===
 figure('Name', 'Anti-Dive Angle', 'NumberTitle', 'off');
@@ -139,6 +144,7 @@ plot(z_disp, anti_dive_percent, 's-', 'LineWidth', 1.5);
 xlabel('Displacement (mm)');
 ylabel('Anti-Dive (%)');
 title('Anti-Dive Angle');
+grid on;
 
 % === Anti-Lift Percent vs Displacement ===
 figure('Name', 'Anti-Lift Angle', 'NumberTitle', 'off');
@@ -146,6 +152,7 @@ plot(z_disp, anti_lift_percent, 's-', 'LineWidth', 1.5);
 xlabel('Displacement (mm)');
 ylabel('Anti-Lift (%)');
 title('Anti-Lift Angle');
+grid on;
 
 % === Roll Center Height (Heave) ===
 figure('Name', 'Roll Center (Heave)', 'NumberTitle', 'off');
@@ -153,6 +160,7 @@ plot(z_disp, rc_heave, 's-', 'LineWidth', 1.5);
 xlabel('Displacement (mm)');
 ylabel('Roll Center Height (mm)');
 title('Roll Center (Heave)');
+grid on;
 
 % === Roll Center Height (Roll) ===
 figure('Name', 'Roll Center (Roll)', 'NumberTitle', 'off');
@@ -160,6 +168,6 @@ plot(roll_angle, rc_roll, 's-', 'LineWidth', 1.5);
 xlabel('Roll Angle (deg)');
 ylabel('Roll Center Height (mm)');
 title('Roll Center (Roll)');
-
 grid on;
+
 end

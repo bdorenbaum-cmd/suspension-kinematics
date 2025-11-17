@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Info description="This MATLAB script performs a kinematic sweep of a suspension system by moving the wheel center through a defined travel range and calculating key geometry values at each step."/>

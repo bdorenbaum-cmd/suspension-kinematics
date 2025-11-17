@@ -5,7 +5,7 @@ axisVec = UO - LO;
 t0 = (WCP(3)-  LO(3)) / axisVec(3);
 K  = LO + t0 * axisVec;
 
-mechanicalTrailInches = WCP(1) - K(1);
+mechanicalTrailInches = K(1) - WCP(1);
 
 mechanicalTrail = convert_inches_to_mm(mechanicalTrailInches);
 end

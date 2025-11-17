@@ -140,6 +140,9 @@ anti_lift_percent_front  = nan(n,1);
 rc_heave_front           = nan(n,1);
 rc_roll_front            = nan(n,1); 
 roll_angle_front         = nan(n,1);
+sauce_angle_front        = [];
+sauce_front              = [];
+sauce_labels_front       = string.empty;
 
 z_disp_rear              = nan(n,1);
 camber_rear              = nan(n,1);
@@ -149,6 +152,9 @@ anti_lift_percent_rear   = nan(n,1);
 rc_heave_rear            = nan(n,1);
 rc_roll_rear             = nan(n,1); 
 roll_angle_rear          = nan(n,1);
+sauce_angle_rear         = [];
+sauce_rear               = [];
+sauce_labels_rear        = string.empty;
 
 for i = 1:n
     target_displacement = displacements(i);
@@ -171,6 +177,16 @@ for i = 1:n
         rc_heave_front(i)          = current_front.roll_center_heave;
         rc_roll_front(i)           = calculate_roll_center_roll(current_front.WCP, current_front.fvic, opposite_front.WCP, opposite_front.fvic);
         roll_angle_front(i)        = calculate_roll_angle(current_front.WCP, opposite_front.WCP);
+
+        for j = 1:n
+            sauce_displacement = displacements(j);
+            sauce = front_results{sauce_displacement};
+            if sauce.z_displacement > -TRAVEL_DELTA && sauce.z_displacement < TRAVEL_DELTA
+                sauce_front(end+1) = calculate_roll_center_roll(current_front.WCP, current_front.fvic, sauce.WCP, sauce.fvic);
+                sauce_angle_front(end+1) = calculate_roll_angle(current_front.WCP, sauce.WCP);
+                sauce_labels_front(end+1) = sprintf("FL: %dmm; FR: %dmm", target_displacement, sauce_displacement);
+            end
+        end
     end
 
     if current_rear.z_displacement > -TRAVEL_DELTA && current_rear.z_displacement < TRAVEL_DELTA
@@ -185,6 +201,16 @@ for i = 1:n
         rc_heave_rear(i)           = current_rear.roll_center_heave;
         rc_roll_rear(i)            = calculate_roll_center_roll(current_rear.WCP, current_rear.fvic, opposite_rear.WCP, opposite_rear.fvic);
         roll_angle_rear(i)         = calculate_roll_angle(current_rear.WCP, opposite_rear.WCP);
+
+        for j = 1:n
+            sauce_displacement = displacements(j);
+            sauce = rear_results{sauce_displacement};
+            if sauce.z_displacement > -TRAVEL_DELTA && sauce.z_displacement < TRAVEL_DELTA
+                sauce_rear(end+1) = calculate_roll_center_roll(current_rear.WCP, current_rear.fvic, sauce.WCP, sauce.fvic);
+                sauce_angle_rear(end+1) = calculate_roll_angle(current_rear.WCP, sauce.WCP);
+                sauce_labels_rear(end+1) = sprintf("RL: %dmm; RR: %dmm", target_displacement, sauce_displacement);
+            end
+        end
     end
 end
 
@@ -312,22 +338,45 @@ xlabel('Displacement (mm)');
 ylabel('Roll Center Height (mm)');
 grid on;
 
-% === Roll Center Height (Roll) ===
-f_rc_roll = figure('Name', 'Roll Center (Roll)', 'NumberTitle', 'off');
+% === Roll Center Height (Symmetric  Roll) ===
+f_rc_roll = figure('Name', 'Roll Center (Symmetric Roll)', 'NumberTitle', 'off');
 
 subplot(2,1,1);
 plot(roll_angle_front, rc_roll_front, 'o-', 'LineWidth', 1.5);
-title('Front - Roll Center (Roll)');
+title('Front - Roll Center (Symmetric Roll)');
 xlabel('Roll Angle (deg)');
 ylabel('Roll Center Height (mm)');
 grid on;
 
 subplot(2,1,2);
 plot(roll_angle_rear, rc_roll_rear, 's-', 'LineWidth', 1.5);
-title('Rear - Roll Center (Roll)');
+title('Rear - Roll Center (Symmetric Roll)');
 xlabel('Roll Angle (deg)');
 ylabel('Roll Center Height (mm)');
 grid on;
+
+% === Secret Sauce ===
+f_sauce = figure('Name', 'Secret Sauce', 'NumberTitle', 'off');
+
+subplot(2,1,1);
+s_sauce_front = scatter(sauce_angle_front, sauce_front, 'filled');
+title('Front - Sauce');
+xlabel('Roll Angle (deg)');
+ylabel('Roll Center Height (mm)');
+grid on;
+
+% Add custom tooltip field
+s_sauce_front.DataTipTemplate.DataTipRows(end+1) = dataTipTextRow('Data', sauce_labels_front);
+
+subplot(2,1,2);
+s_sauce_rear = scatter(sauce_angle_rear, sauce_rear, 'filled');
+title('Rear - Sauce');
+xlabel('Roll Angle (deg)');
+ylabel('Roll Center Height (mm)');
+grid on;
+
+% Add custom tooltip field
+s_sauce_rear.DataTipTemplate.DataTipRows(end+1) = dataTipTextRow('Data', sauce_labels_rear);
 
 %% Export to PDF
 if GENERATE_PDF
@@ -346,6 +395,7 @@ if GENERATE_PDF
     exportgraphics(f_anti_squat, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
     exportgraphics(f_rc_heave, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
     exportgraphics(f_rc_roll, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
+    exportgraphics(f_sauce, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
 end
 
 end

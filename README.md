@@ -23,8 +23,8 @@ This MATLAB script performs a kinematic sweep of a suspension system by moving t
 1. In the "Customize" window, select/drag "New user command" into your toolbar
 1. Right click and choose `/src/main-nx.cs` file as the action file.
 1. Run your action, on Success you should see a confirmation that a csv was generated.
-1. *Optional:* confirm the file was creaetd by going to `C:\Users\<unique name>\Kinematic Points.csv`
-1. Open Matlab and run `/src/main.m`. Make sure you set `USE_TEST_DATA = false;`. This will tell the script to use the csv file you just generated
+1. *Optional:* confirm the file was creaetd by going to `C:\Users\<unique name>\Kinematic Points.csv`. Ensure the X-axis is oriented in the forward direction and the Y-axis is oriented in the left direction when facing forward.
+1. Open Matlab and run `/src/main.m`. Make sure you set `USE_NX_DATA = true;`. This will tell the script to use the csv file you just generated. Double check the car configuration (CoG, Brake Bias) values.
 1. *Optional:* If you also want to generate a PDF set `GENERATE_PDF = true;`. The PDF will appear in the root of the matlab project.
 
 ## Getting Started with Git/Gitlab

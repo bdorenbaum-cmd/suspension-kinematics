@@ -1,12 +1,14 @@
 function main()
-TRAVEL_DELTA = 24;
+%% Program Configuration
+TRAVEL_DELTA = 25;
+USE_NX_DATA = false;
+GENERATE_PDF = false;
+
+%% Car Configuration
 BRAKE_BIAS_PERCENT = 60;
 COG_HEIGHT_INCHES = convert_mm_to_inches(269);
-
-EXPORT_GRAPHICS_FILE_NAME = "Suspension Report.pdf";
-EXPORT_GRAPHICS_HEGIHT = "auto";
-EXPORT_GRAPHICS_WIDTH = "auto";
-EXPORT_GRAPHICS_PADDING = 30;
+TOE_FRONT = 0.005;
+TOE_REAR = 0.005;
 
 displacements = (-TRAVEL_DELTA:1:TRAVEL_DELTA).';
 
@@ -14,9 +16,7 @@ n = numel(displacements);
 front_results = dictionary;
 rear_results = dictionary;
 
-P = get_kinematic_points();
-
-wheel_base = abs(P.FWC(1) - P.RWC(1));
+P = get_kinematic_points(USE_NX_DATA);
 
 for i = 1:n
 
@@ -68,6 +68,7 @@ for i = 1:n
     front.svic = calculate_svic(P.FUCA, P.FUCF, P.FLCA, P.FLCF, front.UCO, front.LCO, front.WC);
 
     % Anti Dive
+    wheel_base = abs(front.WC(1) - P.RWC(1));
     front.anti_dive_percent = calculate_anti_dive(front.WCP, front.svic, BRAKE_BIAS_PERCENT, COG_HEIGHT_INCHES, wheel_base);
 
     % Anti Lift
@@ -115,6 +116,7 @@ for i = 1:n
     rear.svic = calculate_svic(P.RUCA, P.RUCF, P.RLCA, P.RLCF, rear.UCO, rear.LCO, rear.WC);
 
     % Anti Dive
+    wheel_base = abs(P.FWC(1) - rear.WC(1));
     rear.anti_squat_percent = calculate_anti_squat(rear.WCP, rear.svic, COG_HEIGHT_INCHES, wheel_base);
 
     % Anti Lift
@@ -154,15 +156,16 @@ for i = 1:n
     current_front = front_results{target_displacement};
     current_rear = rear_results{target_displacement};
 
-    if current_front.z_displacement > -25 && current_front.z_displacement < 25
+    if current_front.z_displacement > -TRAVEL_DELTA && current_front.z_displacement < TRAVEL_DELTA
+        zero_front = front_results{0};
         opposite_front = front_results{-target_displacement};
     
         z_disp_front(i)            = current_front.z_displacement;
-        camber_front(i)            = current_front.camber;
+        camber_front(i)            = current_front.camber - zero_front.camber;
         caster_front(i)            = current_front.caster;
         mech_trail_front(i)        = current_front.mechanical_trail;
         scrub_radius_front(i)      = current_front.scrub_radius;
-        toe_front(i)               = current_front.toe;
+        toe_front(i)               = current_front.toe - zero_front.toe + TOE_FRONT;
         anti_dive_percent_front(i) = current_front.anti_dive_percent;
         anti_lift_percent_front(i) = current_front.anti_lift_percent;
         rc_heave_front(i)          = current_front.roll_center_heave;
@@ -170,12 +173,13 @@ for i = 1:n
         roll_angle_front(i)        = calculate_roll_angle(current_front.WCP, opposite_front.WCP);
     end
 
-    if current_rear.z_displacement > -25 && current_rear.z_displacement < 25
+    if current_rear.z_displacement > -TRAVEL_DELTA && current_rear.z_displacement < TRAVEL_DELTA
+        zero_rear = rear_results{0};
         opposite_rear = rear_results{-target_displacement};
 
         z_disp_rear(i)             = current_rear.z_displacement;
-        camber_rear(i)             = current_rear.camber;
-        toe_rear(i)                = current_rear.toe;
+        camber_rear(i)             = current_rear.camber - zero_rear.camber;
+        toe_rear(i)                = current_rear.toe - zero_rear.toe + TOE_REAR;
         anti_squat_percent_rear(i) = current_rear.anti_squat_percent;
         anti_lift_percent_rear(i)  = current_rear.anti_lift_percent;
         rc_heave_rear(i)           = current_rear.roll_center_heave;
@@ -184,10 +188,6 @@ for i = 1:n
     end
 end
 
-% Calculate camber rate based on array of results
-camber_rate_front  = calculate_camber_rate(camber_front);
-camber_rate_rear  = calculate_camber_rate(camber_rear);
-
 % Closing to reset old figures if left open
 close all;
 
@@ -195,14 +195,14 @@ close all;
 f_camber = figure('Name', 'Camber Curve', 'NumberTitle', 'off');
 
 subplot(2,1,1);
-plot(z_disp_front, camber_rate_front, 'o-', 'LineWidth', 1.5);
+plot(z_disp_front, camber_front, 'o-', 'LineWidth', 1.5);
 title('Front - Camber Curve');
 xlabel('Displacement (mm)');
 ylabel('Camber (deg)');
 grid on;
 
 subplot(2,1,2);
-plot(z_disp_rear, camber_rate_rear, 's-', 'LineWidth', 1.5);
+plot(z_disp_rear, camber_rear, 's-', 'LineWidth', 1.5);
 title('Rear - Camber Curve');
 xlabel('Displacement (mm)');
 ylabel('Camber (deg)');
@@ -330,17 +330,22 @@ ylabel('Roll Center Height (mm)');
 grid on;
 
 %% Export to PDF
-% Uncomment when you want a PDF generated from all figures
+if GENERATE_PDF
+    EXPORT_GRAPHICS_FILE_NAME = "Suspension Report.pdf";
+    EXPORT_GRAPHICS_HEGIHT = "auto";
+    EXPORT_GRAPHICS_WIDTH = "auto";
+    EXPORT_GRAPHICS_PADDING = 30;
 
-% exportgraphics(f_camber, EXPORT_GRAPHICS_FILE_NAME, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
-% exportgraphics(f_caster, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
-% exportgraphics(f_mech_trail, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
-% exportgraphics(f_scrub_radius, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
-% exportgraphics(f_toe, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
-% exportgraphics(f_anti_dive, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
-% exportgraphics(f_anti_lift, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
-% exportgraphics(f_anti_squat, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
-% exportgraphics(f_rc_heave, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
-% exportgraphics(f_rc_roll, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
+    exportgraphics(f_camber, EXPORT_GRAPHICS_FILE_NAME, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
+    exportgraphics(f_caster, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
+    exportgraphics(f_mech_trail, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
+    exportgraphics(f_scrub_radius, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
+    exportgraphics(f_toe, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
+    exportgraphics(f_anti_dive, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
+    exportgraphics(f_anti_lift, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
+    exportgraphics(f_anti_squat, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
+    exportgraphics(f_rc_heave, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
+    exportgraphics(f_rc_roll, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
+end
 
 end

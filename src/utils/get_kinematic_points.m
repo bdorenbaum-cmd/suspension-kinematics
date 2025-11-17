@@ -1,4 +1,4 @@
-function P = get_kinematic_points()
+function P = get_kinematic_points(use_nx_data)
 %GETKINEMATICPOINTS Load front-suspension hardpoints from CSV into a KinematicsPoints object.
 
 arguments (Output)
@@ -7,12 +7,11 @@ end
 
 % --- Locate and read CSV
 csvName = 'Kinematic Points.csv';
-
 csvPath = fullfile(fileparts(mfilename('fullpath')), '..', '..', 'data', csvName);
 
-% IMPORTANT: If you want to use the data from NX, please uncomment the
-% line. Otherwise you will be using test data.
-% csvPath = fullfile(getenv('USERPROFILE'), csvName);
+if use_nx_data
+    csvPath = fullfile(getenv('USERPROFILE'), csvName);
+end
 
 if ~isfile(csvPath)
     error('getKinematicPoints:MissingCSV', ...

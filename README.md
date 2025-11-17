@@ -17,6 +17,16 @@ This MATLAB script performs a kinematic sweep of a suspension system by moving t
 ### What It Produces
 - Plots for each kinematic metric
 
+## How to Use
+
+1. Open NX, right click the top header and click "Customize"
+1. In the "Customize" window, select/drag "New user command" into your toolbar
+1. Right click and choose `/src/main-nx.cs` file as the action file.
+1. Run your action, on Success you should see a confirmation that a csv was generated.
+1. *Optional:* confirm the file was creaetd by going to `C:\Users\<unique name>\Kinematic Points.csv`
+1. Open Matlab and run `/src/main.m`. Make sure you set `USE_TEST_DATA = false;`. This will tell the script to use the csv file you just generated
+1. *Optional:* If you also want to generate a PDF set `GENERATE_PDF = true;`. The PDF will appear in the root of the matlab project.
+
 ## Getting Started with Git/Gitlab
 
 Follow these steps to set up Git, generate an SSH key, add your key to GitLab, and verify your connection.

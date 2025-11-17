@@ -6,9 +6,14 @@ arguments (Output)
 end
 
 % --- Locate and read CSV
-csvName = 'Points.csv';
-baseDir = fileparts(mfilename('fullpath'));
-csvPath = fullfile(baseDir, '..', '..', 'data', csvName);
+csvName = 'Kinematic Points.csv';
+
+csvPath = fullfile(fileparts(mfilename('fullpath')), '..', '..', 'data', csvName);
+
+% IMPORTANT: If you want to use the data from NX, please uncomment the
+% line. Otherwise you will be using test data.
+% csvPath = fullfile(getenv('USERPROFILE'), csvName);
+
 if ~isfile(csvPath)
     error('getKinematicPoints:MissingCSV', ...
         'Could not find "%s" next to %s.m.', csvName, mfilename);

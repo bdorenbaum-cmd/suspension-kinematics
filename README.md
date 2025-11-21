@@ -31,9 +31,9 @@ This MATLAB script performs a kinematic sweep of a suspension system by moving t
 
 Follow these steps to set up Git, generate an SSH key, add your key to GitLab, and verify your connection.
 
-### 1. Install Git Bash (Windows)
+### 1. Install Git
 
-- Download and install **Git for Windows**, which includes Git Bash.
+- Download and install git. You can follow the instructions [here](https://git-scm.com/install/).
 - Default installation settings work fine.
 
 ### 2. Generate an SSH Key
@@ -41,7 +41,7 @@ Follow these steps to set up Git, generate an SSH key, add your key to GitLab, a
 See the GitLab SSH documentation here:  
 https://gitlab.eecs.umich.edu/help/user/ssh.md
 
-To generate a key quickly:
+TL;DR: open Command Prompt/Terminal and run the following
 
 ```bash
 cd
@@ -69,11 +69,13 @@ Copy the full output of the cat command — this is your public key.
 1. Click **Add key**.
 
 ### 5. Verify SSH access
-Back in Git Bash, run:
+
+You may need to be on the UMich VPN when using git/ssh. You can follow the instructions [here](https://its.umich.edu/enterprise/wifi-networks/vpn/getting-started) to install the vpn.
+
+Back in Command Prompt/Terminal, run:
 ```bash
 ssh -T git@gitlab.eecs.umich.edu
 ```
-- Make sure you are still on the VPN.
 
 The first time, you may be asked
 ```
@@ -91,10 +93,10 @@ Follow these steps if you're new to Git and want to clone a repository, switch t
 
 ### 1. Clone the Repository
 
-Open **Git Bash** and navigate to the folder where you want the project to live. I typically leave it in my home direcotry so run:
+Open Command Prompt and navigate to the folder where you want the project to live. I typically leave it in my home direcotry so run:
 
 ```
-cd
+cd %USERPROFILE%
 ```
 
 Clone this repository using SSH:
@@ -190,8 +192,6 @@ git pull
 ```
 
 This ensures you're up to date with the latest changes.
-
----
 
 ## Important Notes
 1. **Never commit directly to the `main` branch.**  

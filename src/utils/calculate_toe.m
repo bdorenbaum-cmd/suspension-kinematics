@@ -1,15 +1,8 @@
-function toe_deg = calculate_toe(WC, WCP, UO, LO)
-
-k = UO - LO;        % steering axis
-k = k / norm(k);
-
-r = WCP - WC;       % radial vector
-r = r / norm(r);
-
-t = cross(k, r);    % wheel rolling direction
-t(3) = 0;           % project to ground
-t = t / norm(t);
-
-toe_deg = atan2d(t(2), t(1));
-
+function toe = calculate_toe(LCO, UCO, TRO)
+% Knuckle-plane normal using LCO as the common base point
+v1 = UCO - LCO;
+v2 = TRO - LCO;
+knuckle = cross(v1, v2);
+% Top (x-y) view: angle from Y-axis gives toe
+toe = atan2d(knuckle(1), knuckle(2));
 end

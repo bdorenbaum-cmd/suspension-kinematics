@@ -5,7 +5,7 @@ USE_NX_DATA = false;
 GENERATE_PDF = false;
 
 %% Car Configuration
-BRAKE_BIAS_PERCENT = 60;
+BRAKE_BIAS_PERCENT = .6;
 COG_HEIGHT_INCHES = convert_mm_to_inches(269);
 TOE_FRONT = 0.005;
 TOE_REAR = 0.005;
@@ -45,14 +45,21 @@ for i = 1:n
     front.WC = FWC;
     front.WCP = FWCP;
 
+
     % Wheel Center Z in mm (this is the true value wheel travel)
     front.z_displacement = convert_inches_to_mm(front.WC(3) - P.FWC(3));
+
+    % Wheel Center Y Pos
+    front.Y_pos = convert_inches_to_mm(front.WC(2));
 
     % Camber
     front.camber = calculate_camber(front.WC, front.WCP);
 
     % Caster
     front.caster = calculate_caster(front.UCO, front.LCO);
+
+    % Kingpin Inclination
+    front.kingpin_inclination = calculate_kingpin_inclination(front.UCO, front.LCO);
 
     % Mechancial Trail
     front.mechanical_trail = calculate_mechanical_trail(front.UCO, front.LCO, front.WCP);
@@ -64,8 +71,9 @@ for i = 1:n
     front.toe = calculate_toe(front.LCO, front.UCO, front.TRO);
 
     % Instant Centers
+    front.y0 = P.FWC(2);
     front.fvic = calculate_fvic(P.FUCA, P.FUCF, P.FLCA, P.FLCF, front.UCO, front.LCO, front.WC);
-    front.svic = calculate_svic(P.FUCA, P.FUCF, P.FLCA, P.FLCF, front.UCO, front.LCO, front.WC);
+    front.svic = calculate_svic_sideview_from_planes_y0(P.FUCA, P.FUCF, P.FLCA, P.FLCF, front.UCO, front.LCO, front.y0);
 
     % Anti Dive
     wheel_base = abs(front.WC(1) - P.RWC(1));
@@ -78,12 +86,6 @@ for i = 1:n
     front.roll_center_heave = calculate_roll_center_heave(front.fvic, front.WCP);
 
     front_results{target_displacement} = front;
-
-    % Kingpin Inclination
-    front.kingpin_inclination = calculate_kingpin_inclination(front.UCO, front.LCO);
-
-    % Wheel Center Y Pos
-    front.Y_pos = convert_inches_to_mm(front.WC(2));
 
     %% Rear Kinematic Calculations
     rear_params = struct( ...
@@ -111,6 +113,9 @@ for i = 1:n
     % Wheel Center Z in mm (this is the true value wheel travel)
     rear.z_displacement = convert_inches_to_mm(rear.WC(3) - P.RWC(3));
 
+    % Wheel Center Y in mm
+    rear.Y_pos = convert_inches_to_mm(rear.WC(2));
+
     % Camber
     rear.camber = calculate_camber(rear.WC, rear.WCP);
 
@@ -118,11 +123,18 @@ for i = 1:n
     rear.toe = calculate_toe(rear.LCO, rear.UCO, rear.TRO);
 
     % Instant Centers
+    rear.y0 = P.RWC(2);
     rear.fvic = calculate_fvic(P.RUCA, P.RUCF, P.RLCA, P.RLCF, rear.UCO, rear.LCO, rear.WC);
-    rear.svic = calculate_svic(P.RUCA, P.RUCF, P.RLCA, P.RLCF, rear.UCO, rear.LCO, rear.WC);
+    rear.svic = calculate_svic_sideview_from_planes_y0(P.RUCA, P.RUCF, P.RLCA, P.RLCF, front.UCO, front.LCO, front.y0);
+    disp (rear.svic);
 
-    % Anti Dive
-    wheel_base = abs(P.FWC(1) - rear.WC(1));
+    % CG-referenced swing arm angle (Adams style)
+    rear.cog = [P.RWC(1) - wheel_base/2, 0, COG_HEIGHT_INCHES];
+    rear.swing_arm_angle = calculate_adams_swing_arm_angle(rear.svic, rear.cog);
+
+    % Anti Squat
+    rear.y0 = P.RWC(2); 
+    rear.svic = calculate_svic_sideview_from_planes_y0(P.RUCA, P.RUCF, P.RLCA, P.RLCF, rear.UCO, rear.LCO, rear.y0);
     rear.anti_squat_percent = calculate_anti_squat(rear.WCP, rear.svic, COG_HEIGHT_INCHES, wheel_base);
 
     % Anti Lift
@@ -131,10 +143,13 @@ for i = 1:n
     % Roll Center Height (heave)
     rear.roll_center_heave = calculate_roll_center_heave(rear.fvic, rear.WCP);
 
+    % Pitch Center (whole-vehicle, needs both axles)
+    rear.pitch_center = calculate_pitch_center(front.svic, front.WCP, rear.svic, rear.WCP);
+
     rear_results{target_displacement} = rear;
 
-    % Wheel Center Y Pos
-    rear.Y_pos = convert_inches_to_mm(rear.WC(2));
+    % Wheelbase
+    rear.wheelbase = abs(convert_inches_to_mm((front.WC(1) - rear.WC(1))));
 
 end
 
@@ -165,6 +180,9 @@ rc_heave_rear            = nan(n,1);
 rc_roll_rear             = nan(n,1); 
 roll_angle_rear          = nan(n,1);
 y_pos_rear               = nan(n,1);
+swing_arm_angle_rear     = nan(n,1);
+wheelbase                = nan(n,1);
+pitch_center             = nan(n,1);
 sauce_angle_rear         = [];
 sauce_rear               = [];
 sauce_labels_rear        = string.empty;
@@ -217,6 +235,9 @@ for i = 1:n
         rc_roll_rear(i)            = calculate_roll_center_roll(current_rear.WCP, current_rear.fvic, opposite_rear.WCP, opposite_rear.fvic);
         roll_angle_rear(i)         = calculate_roll_angle(current_rear.WCP, opposite_rear.WCP);
         y_pos_rear(i)              = current_rear.Y_pos;
+        swing_arm_angle_rear(i)    = current_rear.swing_arm_angle;
+        wheelbase(i)               = current_rear.wheelbase;
+        pitch_center(i)            = current_rear.pitch_center;
 
         for j = 1:n
             sauce_displacement = displacements(j);
@@ -307,6 +328,14 @@ xlabel('Displacement (mm)');
 ylabel('Toe (deg)');
 grid on;
 
+% === Swing Arm Angle vs. Displacement ===
+
+f_angle = figure('Name','Adams-Style Swing Arm Angle','NumberTitle','off');
+plot(z_disp_rear, swing_arm_angle_rear, 'o-', 'LineWidth', 1.5);
+xlabel('Displacement (mm)');
+ylabel('Angle (deg)');
+grid on;
+
 % === Anti-Dive Percent vs. Displacement ===
 f_anti_dive = figure('Name', 'Anti-Dive', 'NumberTitle', 'off');
 
@@ -336,7 +365,6 @@ grid on;
 
 % === Anti-Squat Percent vs. Displacement ===
 f_anti_squat = figure('Name', 'Anti-Squat', 'NumberTitle', 'off');
-
 subplot(2,1,1);
 plot(z_disp_rear, anti_squat_percent_rear, 's-', 'LineWidth', 1.5);
 xlabel('Displacement (mm)');
@@ -382,7 +410,7 @@ grid on;
 f_wc_y_pos = figure('Name', 'Wheel Center Y-Position', 'NumberTitle', 'off');
 
 subplot(2,1,1);
-plot(z_disp_front, y_pos_front, '-o', 'LineWidth', 1.5);
+plot(z_disp_front, y_pos_front, 'o-', 'LineWidth', 1.5);
 title('Front - Wheel Center Y-Position');
 xlabel('Z-displacement (mm)');
 ylabel('Y-Position (mm)');
@@ -395,6 +423,26 @@ xlabel('Z-displacement (mm)');
 ylabel('Y-Position (mm)');
 grid on;
 
+% === Wheelbase === 
+wheelbase_fig = figure('Name', 'Wheelbase', 'NumberTitle', 'off');
+
+subplot(2,1,1);
+plot(z_disp_rear, wheelbase, 'o-', 'LineWidth', 1.5);
+title('Wheelbase');
+xlabel('Z-Displacement (mm)');
+ylabel('Wheelbase (mm)');
+grid on;
+
+% === Pitch Center Height vs. Displacement ===
+f_pitch_center = figure('Name', 'Pitch Center', 'NumberTitle', 'off');
+
+subplot(2,1,1);
+plot(z_disp_rear, pitch_center, 'o-', 'LineWidth', 1.5);
+title('Pitch Center Height');
+xlabel('Displacement (mm)');
+ylabel('Pitch Center Height (mm)');
+grid on;
+
 % === Secret Sauce ===
 f_sauce = figure('Name', 'Secret Sauce', 'NumberTitle', 'off');
 
@@ -404,6 +452,7 @@ title('Front - Sauce');
 xlabel('Roll Angle (deg)');
 ylabel('Roll Center Height (mm)');
 grid on;
+
 
 % Add custom tooltip field
 s_sauce_front.DataTipTemplate.DataTipRows(end+1) = dataTipTextRow('Data', sauce_labels_front);
@@ -435,6 +484,7 @@ if GENERATE_PDF
     exportgraphics(f_anti_squat, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
     exportgraphics(f_rc_heave, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
     exportgraphics(f_rc_roll, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
+    exportgraphics(f_pitch_center, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
     exportgraphics(f_sauce, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
     exportgraphics(f_kingpin, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
     exportgraphics(f_wc_y_pos, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH)

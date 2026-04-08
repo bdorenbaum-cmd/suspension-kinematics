@@ -1,9 +1,15 @@
-function toe = calculate_toe(LO,UO,TRO)
-% Knuckle-plane normal (order matters; ensure outward direction)
-v2 = TRO - UO;
-v1 = TRO - LO;
-knuckle = cross(v1, v2);
+function toe_deg = calculate_toe(WC, WCP, UO, LO)
 
-% Top (x–y) view; ignore z
-toe = atan2d(knuckle(1), knuckle(2));
+k = UO - LO;        % steering axis
+k = k / norm(k);
+
+r = WCP - WC;       % radial vector
+r = r / norm(r);
+
+t = cross(k, r);    % wheel rolling direction
+t(3) = 0;           % project to ground
+t = t / norm(t);
+
+toe_deg = atan2d(t(2), t(1));
+
 end

@@ -1,5 +1,0 @@
-function kingpin_inclination = calculate_kingpin_inclination(UO, LO)
-   vect = UO - LO; % Calculate the vector between control arm outboards
-   vect = [0, vect(1), vect(2)];
-   kingpin_inclination = atan(vect); % Calculate the angle using atan (looking from front)
-end

@@ -125,7 +125,7 @@ for i = 1:n
     % Instant Centers
     rear.y0 = P.RWC(2);
     rear.fvic = calculate_fvic(P.RUCA, P.RUCF, P.RLCA, P.RLCF, rear.UCO, rear.LCO, rear.WC);
-    rear.svic = calculate_svic_sideview_from_planes_y0(P.RUCA, P.RUCF, P.RLCA, P.RLCF, front.UCO, front.LCO, front.y0);
+    rear.svic = calculate_svic_sideview_from_planes_y0(P.RUCA, P.RUCF, P.RLCA, P.RLCF, rear.UCO, rear.LCO, rear.y0);
     disp (rear.svic);
 
     % CG-referenced swing arm angle (Adams style)
@@ -142,9 +142,6 @@ for i = 1:n
 
     % Roll Center Height (heave)
     rear.roll_center_heave = calculate_roll_center_heave(rear.fvic, rear.WCP);
-
-    % Pitch Center (whole-vehicle, needs both axles)
-    rear.pitch_center = calculate_pitch_center(front.svic, front.WCP, rear.svic, rear.WCP);
 
     rear_results{target_displacement} = rear;
 
@@ -182,6 +179,7 @@ roll_angle_rear          = nan(n,1);
 y_pos_rear               = nan(n,1);
 swing_arm_angle_rear     = nan(n,1);
 wheelbase                = nan(n,1);
+pitch_angle              = nan(n,1);
 pitch_center             = nan(n,1);
 sauce_angle_rear         = [];
 sauce_rear               = [];
@@ -237,7 +235,6 @@ for i = 1:n
         y_pos_rear(i)              = current_rear.Y_pos;
         swing_arm_angle_rear(i)    = current_rear.swing_arm_angle;
         wheelbase(i)               = current_rear.wheelbase;
-        pitch_center(i)            = current_rear.pitch_center;
 
         for j = 1:n
             sauce_displacement = displacements(j);
@@ -248,6 +245,17 @@ for i = 1:n
                 sauce_labels_rear(end+1) = sprintf("RL: %dmm; RR: %dmm", target_displacement, sauce_displacement);
             end
         end
+    end
+
+    % Pitch Center (symmetric pitch: front at +d, rear at -d)
+    if current_front.z_displacement > -TRAVEL_DELTA && current_front.z_displacement < TRAVEL_DELTA ...
+       && current_rear.z_displacement > -TRAVEL_DELTA && current_rear.z_displacement < TRAVEL_DELTA
+
+        opposite_rear_pitch = rear_results{-target_displacement};
+
+        pitch_angle(i)   = calculate_pitch_angle(current_front.WCP, opposite_rear_pitch.WCP);
+        pitch_center(i)  = calculate_pitch_center(current_front.svic, current_front.WCP, ...
+                                                   opposite_rear_pitch.svic, opposite_rear_pitch.WCP);
     end
 end
 
@@ -406,6 +414,16 @@ xlabel('Roll Angle (deg)');
 ylabel('Roll Center Height (mm)');
 grid on;
 
+% === Pitch Center Height (Symmetric Pitch) ===
+f_pitch_center = figure('Name', 'Pitch Center (Symmetric Pitch)', 'NumberTitle', 'off');
+
+subplot(2,1,1);
+plot(pitch_angle, pitch_center, 'o-', 'LineWidth', 1.5);
+title('Pitch Center (Symmetric Pitch)');
+xlabel('Pitch Angle (deg)');
+ylabel('Pitch Center Height (mm)');
+grid on;
+
 % === Wheel Center Y-Pos ===
 f_wc_y_pos = figure('Name', 'Wheel Center Y-Position', 'NumberTitle', 'off');
 
@@ -431,16 +449,6 @@ plot(z_disp_rear, wheelbase, 'o-', 'LineWidth', 1.5);
 title('Wheelbase');
 xlabel('Z-Displacement (mm)');
 ylabel('Wheelbase (mm)');
-grid on;
-
-% === Pitch Center Height vs. Displacement ===
-f_pitch_center = figure('Name', 'Pitch Center', 'NumberTitle', 'off');
-
-subplot(2,1,1);
-plot(z_disp_rear, pitch_center, 'o-', 'LineWidth', 1.5);
-title('Pitch Center Height');
-xlabel('Displacement (mm)');
-ylabel('Pitch Center Height (mm)');
 grid on;
 
 % === Secret Sauce ===

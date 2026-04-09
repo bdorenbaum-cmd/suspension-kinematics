@@ -1,0 +1,45 @@
+# ----------------------------------------------------------------------
+# MATLAB-generated files
+# ----------------------------------------------------------------------
+*.asv                 # Autosave files
+*.mex*                # Compiled MEX binaries
+*.mlappinstall        # App installer files
+*.mltbx               # Toolbox archive
+*.slxc                # Simulink cache files
+*.slx.autosave        # Autosave for Simulink models
+*.mdl.autosave        # Autosave for MDL files
+
+# MATLAB Code Analyzer cache
+codeAnalyzer/*.json
+
+# ----------------------------------------------------------------------
+# Project / IDE artifacts
+# ----------------------------------------------------------------------
+*.prj.autosave
+*.matlabBackup
+*.backup
+
+# MATLAB projects create a .SimulinkProject folder (keep core metadata)
+.SimulinkProject/RootLevel/Logs/*
+.SimulinkProject/RootLevel/Temp/*
+.SimulinkProject/Resources/Images/Thumbnails/*
+
+# ----------------------------------------------------------------------
+# Operating system junk
+# ----------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+
+# ----------------------------------------------------------------------
+# User-specific / machine-specific files
+# ----------------------------------------------------------------------
+*.swp
+*.swo
+*.tmp
+*.log
+
+# ----------------------------------------------------------------------
+# Build artifacts (optional)
+# ----------------------------------------------------------------------
+build/
+dist/

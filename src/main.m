@@ -1,4 +1,9 @@
 function main()
+%% Path Setup — ensure utils, classes, and data are visible
+thisDir = fileparts(mfilename('fullpath'));
+addpath(fullfile(thisDir, 'utils'));
+addpath(fullfile(thisDir, 'classes'));
+
 %% Program Configuration
 TRAVEL_DELTA = 25;
 USE_NX_DATA = false;
@@ -126,7 +131,6 @@ for i = 1:n
     rear.y0 = P.RWC(2);
     rear.fvic = calculate_fvic(P.RUCA, P.RUCF, P.RLCA, P.RLCF, rear.UCO, rear.LCO, rear.WC);
     rear.svic = calculate_svic_sideview_from_planes_y0(P.RUCA, P.RUCF, P.RLCA, P.RLCF, rear.UCO, rear.LCO, rear.y0);
-    disp (rear.svic);
 
     % CG-referenced swing arm angle (Adams style)
     rear.cog = [P.RWC(1) - wheel_base/2, 0, COG_HEIGHT_INCHES];

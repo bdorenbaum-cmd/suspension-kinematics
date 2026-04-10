@@ -1,5 +1,5 @@
-function pitch_center_height = calculate_pitch_center(front_svic, front_WCP, rear_svic, rear_WCP)
-% CALCULATE_PITCH_CENTER  Pitch center height from front/rear SVICs and WCPs.
+function [pitch_center_height, pitch_center_x] = calculate_pitch_center(front_svic, front_WCP, rear_svic, rear_WCP)
+% CALCULATE_PITCH_CENTER  Pitch center from front/rear SVICs and WCPs.
 %
 %   The pitch center is the intersection of the side-view force lines
 %   (WCP-to-SVIC) for the front and rear axles, projected into the X-Z plane.
@@ -10,8 +10,9 @@ function pitch_center_height = calculate_pitch_center(front_svic, front_WCP, rea
 %       rear_svic   - [x, y, z] rear side-view instant center
 %       rear_WCP    - [x, y, z] rear wheel contact patch
 %
-%   Output:
+%   Outputs:
 %       pitch_center_height - Z-coordinate of the pitch center (mm)
+%       pitch_center_x      - X-coordinate of the pitch center (mm)
 
     % Front force line in X-Z
     a1 = [front_WCP(1); front_WCP(3)];
@@ -22,9 +23,11 @@ function pitch_center_height = calculate_pitch_center(front_svic, front_WCP, rea
     b2 = [rear_svic(1); rear_svic(3)];
 
     try
-        [~, iz] = intersect_lines_2d(a1, a2, b1, b2);
+        [ix, iz] = intersect_lines_2d(a1, a2, b1, b2);
         pitch_center_height = convert_inches_to_mm(iz);
+        pitch_center_x = convert_inches_to_mm(ix);
     catch
         pitch_center_height = NaN;
+        pitch_center_x = NaN;
     end
 end

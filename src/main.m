@@ -185,6 +185,7 @@ swing_arm_angle_rear     = nan(n,1);
 wheelbase                = nan(n,1);
 pitch_angle              = nan(n,1);
 pitch_center             = nan(n,1);
+pitch_center_x           = nan(n,1);
 sauce_angle_rear         = [];
 sauce_rear               = [];
 sauce_labels_rear        = string.empty;
@@ -258,7 +259,7 @@ for i = 1:n
         opposite_rear_pitch = rear_results{-target_displacement};
 
         pitch_angle(i)   = calculate_pitch_angle(current_front.WCP, opposite_rear_pitch.WCP);
-        pitch_center(i)  = calculate_pitch_center(current_front.svic, current_front.WCP, ...
+        [pitch_center(i), pitch_center_x(i)] = calculate_pitch_center(current_front.svic, current_front.WCP, ...
                                                    opposite_rear_pitch.svic, opposite_rear_pitch.WCP);
     end
 end
@@ -428,6 +429,16 @@ xlabel('Pitch Angle (deg)');
 ylabel('Pitch Center Height (mm)');
 grid on;
 
+% === Pitch Center X-Position (Symmetric Pitch) ===
+f_pitch_center_x = figure('Name', 'Pitch Center X-Position (Symmetric Pitch)', 'NumberTitle', 'off');
+
+subplot(2,1,1);
+plot(pitch_angle, pitch_center_x, 'o-', 'LineWidth', 1.5);
+title('Pitch Center X-Position (Symmetric Pitch)');
+xlabel('Pitch Angle (deg)');
+ylabel('Pitch Center X-Position (mm)');
+grid on;
+
 % === Wheel Center Y-Pos ===
 f_wc_y_pos = figure('Name', 'Wheel Center Y-Position', 'NumberTitle', 'off');
 
@@ -497,6 +508,7 @@ if GENERATE_PDF
     exportgraphics(f_rc_heave, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
     exportgraphics(f_rc_roll, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
     exportgraphics(f_pitch_center, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
+    exportgraphics(f_pitch_center_x, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
     exportgraphics(f_sauce, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'Padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
     exportgraphics(f_kingpin, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH);
     exportgraphics(f_wc_y_pos, EXPORT_GRAPHICS_FILE_NAME, 'Append', true, 'padding', EXPORT_GRAPHICS_PADDING, 'Height', EXPORT_GRAPHICS_HEGIHT, 'Width', EXPORT_GRAPHICS_WIDTH)
